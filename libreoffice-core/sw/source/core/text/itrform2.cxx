@@ -672,14 +672,14 @@ void SwTextFormatter::BuildPortions( SwTextFormatInfo &rInf )
                 pPor->GetLen() && !pPor->InFieldGrp() )
             {
                 // The distance between two different scripts is set
-                // to 20% of the fontheight.
+                // to 25% of the fontheight (LOWA: 20% -> 25% for Word compatibility).
                 TextFrameIndex const nTmp = rInf.GetIdx() + pPor->GetLen();
                 if (nTmp == m_pScriptInfo->NextScriptChg(nTmp - TextFrameIndex(1)) &&
                     nTmp != TextFrameIndex(rInf.GetText().getLength()) &&
                     (m_pScriptInfo->ScriptType(nTmp - TextFrameIndex(1)) == css::i18n::ScriptType::ASIAN ||
                      m_pScriptInfo->ScriptType(nTmp) == css::i18n::ScriptType::ASIAN) )
                 {
-                    const SwTwips nDist = rInf.GetFont()->GetHeight()/5;
+                    const SwTwips nDist = rInf.GetFont()->GetHeight()/4; // LOWA: Word 互換 (25%)
 
                     if( nDist )
                     {
