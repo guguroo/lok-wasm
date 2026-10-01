@@ -19,6 +19,8 @@
 
 #include <sal/config.h>
 
+#include <cstdlib>
+#include <rtl/ustrbuf.hxx>
 #include <unx/geninst.h>
 #include <font/PhysicalFontCollection.hxx>
 #include <font/fontsubstitution.hxx>
@@ -180,6 +182,44 @@ bool FcGlyphFallbackSubstitution::FindFontSubstitute(vcl::font::FontSelectPatter
     // OpenSymbol is a unicode font, but it still deserves to be treated as a symbol font
     if ( IsOpenSymbol(rFontSelData.maSearchName) )
         return false;
+
+#if defined EMSCRIPTEN
+    // LOWA: the deployment targets Windows 11 with locally injected fonts, and
+    // fontconfig's coverage matching over those can pick kana-less Latin fonts
+    // for CJK gaps (tofu; see lowa-poc EXPERIMENTS.md EXP-20260708-05). Route
+    // CJK glyph fallback to the designated Japanese font; other scripts keep
+    // using the fontconfig path.
+    {
+        OUStringBuffer aRemaining;
+        bool bHasCJK = false;
+        for (sal_Int32 nIdx = 0; nIdx < rMissingCodes.getLength();)
+        {
+            const sal_UCS4 c = rMissingCodes.iterateCodePoints(&nIdx);
+            const bool bCJK = (c >= 0x3000 && c <= 0x9FFF)     // CJK記号/かな/漢字
+                           || (c >= 0xF900 && c <= 0xFAFF)     // CJK互換漢字
+                           || (c >= 0xFF00 && c <= 0xFFEF)     // 全角・半角形
+                           || (c >= 0x20000 && c <= 0x3FFFF);  // 拡張漢字面
+            if (bCJK)
+                bHasCJK = true;
+            else
+                aRemaining.appendUtf32(c);
+        }
+        if (bHasCJK)
+        {
+            // フォールバック先は LOWA_CJK_FALLBACK_FONT 環境変数（mjs の preRun で
+            // ENV 経由設定可能）で差し替えられる。既定は BIZ UDPGothic（Windows 11
+            // 標準搭載・SIL OFL）。アプリ側は選択フォントを必ず VFS に注入すること
+            // （family が解決できないとフォールバック自体が失敗し豆腐化する）。
+            static const OUString sFallbackFont = []() {
+                const char* pEnv = ::getenv("LOWA_CJK_FALLBACK_FONT");
+                return (pEnv && *pEnv) ? OUString::fromUtf8(pEnv) : u"BIZ UDPGothic"_ustr;
+            }();
+            rFontSelData.maSearchName = sFallbackFont;
+            rMissingCodes = aRemaining.makeStringAndClear();
+            return true;
+        }
+    }
+#endif
 
     const vcl::font::FontSelectPattern aOut = GetFcSubstitute( rFontSelData, rMissingCodes );
     // TODO: cache the unicode + srcfont specific result

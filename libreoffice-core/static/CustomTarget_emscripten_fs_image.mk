@@ -46,6 +46,12 @@ gb_emscripten_fs_image_files := \
     $(INSTROOT)/$(LIBO_ETC_FOLDER)/$(call gb_Helper_get_rcfile,soffice) \
     $(INSTROOT)/$(LIBO_ETC_FOLDER)/$(call gb_Helper_get_rcfile,version) \
     $(INSTROOT)/$(LIBO_ETC_FOLDER)/services/services.rdb \
+    $(INSTROOT)/$(LIBO_SHARE_FOLDER)/calc/styles.xml \
+    $(INSTROOT)/$(LIBO_SHARE_FOLDER)/config/soffice.cfg/simpress/effects.xml \
+    $(INSTROOT)/$(LIBO_SHARE_FOLDER)/config/soffice.cfg/simpress/transitions.xml \
+    $(INSTROOT)/$(LIBO_SHARE_FOLDER)/config/soffice.cfg/simpress/layoutlist.xml \
+    $(INSTROOT)/$(LIBO_SHARE_FOLDER)/config/soffice.cfg/simpress/objectlist.xml \
+    $(INSTROOT)/$(LIBO_SHARE_FOLDER)/config/soffice.cfg/simpress/styles.xml \
     $(INSTROOT)/$(LIBO_SHARE_FOLDER)/config/soffice.cfg/cui/ui/aboutconfigdialog.ui \
     $(INSTROOT)/$(LIBO_SHARE_FOLDER)/config/soffice.cfg/cui/ui/aboutdialog.ui \
     $(INSTROOT)/$(LIBO_SHARE_FOLDER)/config/soffice.cfg/cui/ui/accelconfigpage.ui \
@@ -1399,6 +1405,8 @@ gb_emscripten_fs_image_files += \
     $(INSTROOT)/$(LIBO_SHARE_FOLDER)/registry/res/registry_en-US.xcd \
     $(INSTROOT)/$(LIBO_SHARE_FOLDER)/registry/writer.xcd \
 	$(INSTROOT)/$(LIBO_SHARE_FOLDER)/registry/calc.xcd \
+	$(INSTROOT)/$(LIBO_SHARE_FOLDER)/registry/impress.xcd \
+	$(INSTROOT)/$(LIBO_SHARE_FOLDER)/registry/draw.xcd \
     $(INSTROOT)/$(LIBO_SHARE_FOLDER)/registry/xsltfilter.xcd \
     $(INSTROOT)/$(LIBO_SHARE_PRESETS_FOLDER)/autotext/mytexts.bau \
     $(INSTROOT)/$(LIBO_SHARE_PRESETS_FOLDER)/basic/dialog.xlc \

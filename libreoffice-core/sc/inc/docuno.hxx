@@ -132,6 +132,8 @@ protected:
     virtual SdrModel& getSdrModelFromUnoModel() const override;
 
 public:
+    virtual void setAuthor(OUString) override {}
+
                             ScModelObj(ScDocShell* pDocSh);
     virtual                 ~ScModelObj() override;
 

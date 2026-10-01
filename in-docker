@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 arch=$(uname -m)
 emsdk_version=3.1.73
 
@@ -8,6 +8,11 @@ else
   docker build -t lok-wasm:$emsdk_version --build-arg VER=$emsdk_version .
 fi
 mkdir -p .cache .npm
+
+# 引数が渡されたらそれをコンテナ内で実行、なければ従来通り対話bashを起動
+if [ $# -eq 0 ]; then
+  set -- bash
+fi
 
 exec docker run \
   --rm \
@@ -22,4 +27,4 @@ exec docker run \
   -u $(id -u):$(id -g) \
   -w / \
   lok-wasm:$emsdk_version \
-  bash
+  "$@"

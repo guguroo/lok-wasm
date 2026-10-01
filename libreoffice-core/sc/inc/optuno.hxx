@@ -65,6 +65,8 @@ public:
                                     const css::uno::Any& aValue ) override;
     virtual css::uno::Any SAL_CALL getPropertyValue(
                                     const OUString& PropertyName ) override;
+
+    virtual void setAuthor(OUString) override {}
 };
 
 /* vim:set shiftwidth=4 softtabstop=4 expandtab: */

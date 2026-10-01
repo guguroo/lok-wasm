@@ -68,6 +68,13 @@ lok::Office* instance()
     static lok::Office* instance_ = nullptr;
     if (!instance_)
     {
+        // sal's log level singleton caches getenv("SAL_LOG") on first use; setting it via
+        // Emscripten's JS ENV does not reach it reliably, so set it here before any SAL log call
+        setenv("SAL_LOG", "+INFO.filter.config+INFO.sfx.doc+WARN", 1);
+        // LOWA: threaded formula-group calculation would block on worker threads,
+        // which is impossible on the browser main thread (Atomics.wait disallowed)
+        setenv("SC_NO_THREADED_CALCULATION", "1", 1);
+
         instance_ = lok::lok_cpp_init(/* use default path */ nullptr);
         instance_->setOptionalFeatures(
             LOK_FEATURE_PART_IN_INVALIDATION_CALLBACK | LOK_FEATURE_NO_TILED_ANNOTATIONS
@@ -82,6 +89,18 @@ lok::Office* instance()
 //static
 void preload() { instance(); }
 void yield() { if (GetpApp()) GetpApp()->Yield(); }
+
+// LOWA: 直近の LOK エラーメッセージを JS から取得できるようにする
+// （Document ロード失敗時に valid()=false と合わせて失敗理由の特定に使う）
+std::string getLastError()
+{
+    char* pError = instance()->getError();
+    if (!pError)
+        return {};
+    std::string aError(pError);
+    instance()->freeError(pError);
+    return aError;
+}
 
 static constexpr std::string_view TEXT_PLAIN = "text/plain";
 
@@ -341,6 +360,15 @@ public:
         : ref_(++document_id_counter)
         , doc_(instance()->documentLoad(path.c_str()))
     {
+        // LOWA: documentLoad はロード失敗時に nullptr を返す。ここで止めないと
+        // 直後の ext() が null 経由の仮想呼び出しになり "table index is out of
+        // bounds" の WASM トラップで落ちる（JS 側は valid() と getLastError() で
+        // 失敗理由を取得できる）。
+        if (!doc_)
+        {
+            SAL_WARN("wasm", "documentLoad failed for: " << path.c_str());
+            return;
+        }
         using namespace css;
         using namespace css::uno;
         try
@@ -1084,6 +1112,7 @@ EMSCRIPTEN_BINDINGS(lok)
     function("preload", &preload);
     function("freeSafeString", &freeSafeString);
     function("yield", &yield);
+    function("getLastError", &getLastError);
 
     class_<wasm::ITextRanges>("TextRanges")
         .smart_ptr<std::shared_ptr<wasm::ITextRanges>>("TextRanges")

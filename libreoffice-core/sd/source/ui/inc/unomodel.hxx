@@ -227,6 +227,9 @@ public:
     virtual void SAL_CALL render( sal_Int32 nRenderer, const css::uno::Any& aSelection, const css::uno::Sequence< css::beans::PropertyValue >& xOptions ) override;
 
     // ITiledRenderable
+    // LOWA: フォーク独自の純粋仮想関数（コメント著者名設定用、sc/docuno.hxx の
+    // スタブと同じ対応。文書ロード・描画とは無関係）
+    virtual void setAuthor(OUString) override {}
     virtual void paintTile( VirtualDevice& rDevice,
                             int nOutputWidth,
                             int nOutputHeight,

@@ -311,6 +311,20 @@ void importSheetFragments( WorkbookFragment& rWorkbookHandler, SheetFragmentVect
 {
     rWorkbookHandler.getDocImport().initForSheets();
 
+#if defined EMSCRIPTEN
+    // LOWA: the LOK module may run on the browser main thread, where blocking on
+    // worker threads is impossible (Atomics.wait is disallowed there), so import
+    // the sheets sequentially in the calling thread instead of the thread pool.
+    for (auto& [rxSheetGlob, rxFragment] : rSheets)
+    {
+        (void)rxSheetGlob;
+        SolarMutexGuard aGuard;
+        std::unique_ptr<oox::core::FastParser> xParser(oox::core::XmlFilterBase::createParser());
+        rWorkbookHandler.importOoxFragment(rxFragment, *xParser);
+    }
+    return;
+#endif
+
     // test sequential read in this mode
     comphelper::ThreadPool &rSharedPool = comphelper::ThreadPool::getSharedOptimalPool();
     std::shared_ptr<comphelper::ThreadTaskTag> pTag = comphelper::ThreadPool::createThreadTaskTag();

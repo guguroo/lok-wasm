@@ -1920,6 +1920,7 @@ double ScInterpreter::GetHypGeomDist( double x, double n, double M, double N )
     }
 
     double fCNumLower = N - n - fCNumVarUpper;
+    (void)fCNumLower;
     double fCDenomUpper = N - n - M + x + 1.0 - fCDenomVarLower;
 
     double fDNumVarLower = n - M;

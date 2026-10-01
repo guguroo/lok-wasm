@@ -2952,6 +2952,7 @@ void ScXMLExport::WriteTable(sal_Int32 nTable, const uno::Reference<sheet::XSpre
         ::xmloff::OOfficeFormsExport aForms(*this);
         GetFormExport()->exportForms( xDrawPage );
         bool bRet(GetFormExport()->seekPage( xDrawPage ));
+        (void)bRet;
         OSL_ENSURE( bRet, "OFormLayerXMLExport::seekPage failed!" );
     }
     if (pSharedData->HasDrawPage())

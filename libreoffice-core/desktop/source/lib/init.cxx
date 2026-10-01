@@ -3037,7 +3037,10 @@ static LibreOfficeKitDocument* lo_documentLoadWithOptions(LibreOfficeKit* pThis,
         // to bring saveas dialog which cannot work with LOK case
         uno::Sequence<css::beans::PropertyValue> aFilterOptions{
             comphelper::makePropertyValue(u"FilterOptions"_ustr, aOptions),
-            comphelper::makePropertyValue(u"FilterName"_ustr, OUString("MS Word 2007 XML")),
+            // LOWA: the fork hardcoded the Word import filter here, which force-loaded
+            // every document (xlsx/ods included) through writerfilter and bypassed type
+            // detection entirely. Let TypeDetection pick the right filter instead.
+            // comphelper::makePropertyValue(u"FilterName"_ustr, OUString("MS Word 2007 XML")),
             comphelper::makePropertyValue(u"InteractionHandler"_ustr, xInteraction),
             comphelper::makePropertyValue(u"MacroExecutionMode"_ustr, nMacroExecMode),
             comphelper::makePropertyValue(u"AsTemplate"_ustr, false),
@@ -8433,8 +8436,8 @@ static void preloadData()
 
     static constexpr OUString preloadComponents[] = {
         u"private:factory/swriter"_ustr,
+        u"private:factory/scalc"_ustr,
     // MACRO: only preload swriter {
-        // u"private:factory/scalc"_ustr,
         // u"private:factory/simpress"_ustr,
         // u"private:factory/sdraw"_ustr
     // MACRO: only preload swriter }

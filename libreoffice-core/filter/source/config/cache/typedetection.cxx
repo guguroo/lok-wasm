@@ -55,6 +55,17 @@ using std::endl;
 
 using namespace com::sun::star;
 
+// LOWA: runtime-switchable type-detection diagnostics. SAL_INFO is compiled out
+// in release builds, so these use SAL_WARN, gated by the LOWA_DIAG environment
+// variable (settable e.g. from main_wasm.cxx via setenv before LOK init).
+static bool lowaDiagEnabled()
+{
+    static const bool bEnabled = ::getenv("LOWA_DIAG") != nullptr;
+    return bEnabled;
+}
+#define LOWA_DIAG_WARN(...) \
+    do { if (lowaDiagEnabled()) SAL_WARN("filter.config", __VA_ARGS__); } while (false)
+
 namespace filter::config{
 
 TypeDetection::TypeDetection(const css::uno::Reference< css::uno::XComponentContext >& rxContext)
@@ -424,6 +435,15 @@ OUString SAL_CALL TypeDetection::queryTypeByDescriptor(css::uno::Sequence< css::
         auto last = std::unique(lFlatTypes.begin(), lFlatTypes.end(), EqualByType());
         lFlatTypes.erase(last, lFlatTypes.end());
 
+        // LOWA-DIAG: SAL_INFO is compiled out in this build, so trace via SAL_WARN
+        LOWA_DIAG_WARN("LOWA-DIAG queryTypeByDescriptor url='" << sURL
+            << "' allowDeep=" << bAllowDeep << " candidates=" << lFlatTypes.size());
+        for (auto const& rFlatTypeInfo : lFlatTypes)
+            LOWA_DIAG_WARN("LOWA-DIAG   candidate '" << rFlatTypeInfo.sType
+                << "' ext=" << rFlatTypeInfo.bMatchByExtension
+                << " pattern=" << rFlatTypeInfo.bMatchByPattern
+                << " docservice=" << rFlatTypeInfo.bPreselectedByDocumentService);
+
         OUString sLastChance;
 
         // verify every flat detected (or preselected!) type
@@ -466,6 +486,9 @@ OUString SAL_CALL TypeDetection::queryTypeByDescriptor(css::uno::Sequence< css::
     // for type/filter name/document service/ etcpp.
     impl_checkResultsAndAddBestFilter(stlDescriptor, sType); // Attention: sType is used as IN/OUT param here and will might be changed inside this method !!!
     impl_validateAndSetTypeOnDescriptor(stlDescriptor, sType);
+
+    LOWA_DIAG_WARN("LOWA-DIAG queryTypeByDescriptor result type='" << sType
+        << "' filter='" << stlDescriptor.getUnpackedValueOrDefault(utl::MediaDescriptor::PROP_FILTERNAME, OUString()) << "'");
 
     stlDescriptor >> lDescriptor;
     return sType;
@@ -1005,7 +1028,10 @@ OUString TypeDetection::impl_detectTypeFlatAndDeep(      utl::MediaDescriptor& r
         OUString sFlatType = flatTypeInfo.sType;
 
         if (!impl_validateAndSetTypeOnDescriptor(rDescriptor, sFlatType))
+        {
+            LOWA_DIAG_WARN("LOWA-DIAG   flat type '" << sFlatType << "' failed validation, skipped");
             continue;
+        }
 
         // b)
         if (
@@ -1036,6 +1062,8 @@ OUString TypeDetection::impl_detectTypeFlatAndDeep(      utl::MediaDescriptor& r
                 if (rLastChance.isEmpty())
                     rLastChance = sFlatType;
 
+                LOWA_DIAG_WARN("LOWA-DIAG   type '" << sFlatType
+                    << "' has no detect service, lastChance='" << rLastChance << "'");
                 continue;
             }
 
@@ -1119,7 +1147,10 @@ OUString TypeDetection::impl_askDetectService(const OUString&               sDet
     }
 
     if ( ! xDetector.is())
+    {
+        LOWA_DIAG_WARN("LOWA-DIAG detector '" << sDetectService << "' could NOT be created");
         return OUString();
+    }
 
     OUString sDeepType;
     try
@@ -1143,6 +1174,7 @@ OUString TypeDetection::impl_askDetectService(const OUString&               sDet
         // Thrown exceptions mostly will end in crash recovery...
         // But might be we find another deep detection service which can detect the same
         // document without a problem .-)
+        LOWA_DIAG_WARN("LOWA-DIAG detector '" << sDetectService << "' detect() threw an exception");
         sDeepType.clear();
     }
 
@@ -1158,6 +1190,8 @@ OUString TypeDetection::impl_askDetectService(const OUString&               sDet
     // this special helper checks for a valid type
     // and set right values on the descriptor!
     bool bValidType = impl_validateAndSetTypeOnDescriptor(rDescriptor, sDeepType);
+    LOWA_DIAG_WARN("LOWA-DIAG detector '" << sDetectService << "' returned '"
+        << sDeepType << "' valid=" << bValidType);
     if (bValidType)
         return sDeepType;
 

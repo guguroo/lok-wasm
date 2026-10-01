@@ -56,6 +56,7 @@
 #include <officecfg/Office/Common.hxx>
 #include <rtl/ref.hxx>
 #include <sal/log.hxx>
+#include <cstdlib>
 #include <svl/eitem.hxx>
 #include <svl/stritem.hxx>
 #include <unotools/fcm.hxx>
@@ -613,6 +614,14 @@ sal_Bool SAL_CALL SfxFrameLoader_Impl::load( const Sequence< PropertyValue >& rA
     ENSURE_OR_THROW( _rTargetFrame.is(), "illegal NULL frame" );
 
     SAL_INFO( "sfx.view", "SfxFrameLoader::load" );
+    // LOWA: 実行時診断（SAL_INFO はリリースビルドで除去されるため SAL_WARN を
+    // LOWA_DIAG 環境変数でゲートして使う。typedetection.cxx の LOWA-DIAG と同じ方式）
+    {
+        static const bool bLowaDiag = ::getenv("LOWA_DIAG") != nullptr;
+        if (bLowaDiag)
+            SAL_WARN("sfx.view", "LOWA-DIAG SfxFrameLoader::load url='"
+                << ::comphelper::NamedValueCollection(rArgs).getOrDefault("URL", OUString()) << "'");
+    }
 
     ::comphelper::NamedValueCollection aDescriptor( rArgs );
 
@@ -775,6 +784,10 @@ sal_Bool SAL_CALL SfxFrameLoader_Impl::load( const Sequence< PropertyValue >& rA
     catch ( Exception& e)
     {
         const Any aError( ::cppu::getCaughtException() );
+        // LOWA: ここで握りつぶされる例外がロード失敗（空参照）の真因になるため、
+        // 例外型とメッセージを必ずログに残す
+        SAL_WARN("sfx.view", "LOWA-DIAG SfxFrameLoader::load caught exception type='"
+            << aError.getValueTypeName() << "' message='" << e.Message << "'");
         if ( !aDescriptor.getOrDefault( "Silent", false ) )
             impl_handleCaughtError_nothrow( aError, aDescriptor );
     }
