@@ -309,7 +309,7 @@ void SvpSalYieldMutex::doAcquire(sal_uInt32 const nLockCount)
 #ifdef EMSCRIPTEN
                 // LOWA: このメインランタイムスレッドは Atomics.wait 不可のため
                 // condition_variable::wait が terminate する（pptx の oox テキスト
-                // インポートで発生。lowa-poc EXPERIMENTS.md EXP-20260712-16〜18）。
+                // インポートで発生）。
                 // ブロックせずスピン（短時間スリープ＋再試行）に置き換える。処理待ちの
                 // リクエスト（m_wakeUpMain）が来ていれば従来どおり処理し、そうでなければ
                 // 外側ループへ戻って tryToAcquire を再試行する。

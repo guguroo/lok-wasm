@@ -186,7 +186,7 @@ bool FcGlyphFallbackSubstitution::FindFontSubstitute(vcl::font::FontSelectPatter
 #if defined EMSCRIPTEN
     // LOWA: the deployment targets Windows 11 with locally injected fonts, and
     // fontconfig's coverage matching over those can pick kana-less Latin fonts
-    // for CJK gaps (tofu; see lowa-poc EXPERIMENTS.md EXP-20260708-05). Route
+    // for CJK gaps (tofu glyphs in the output PDF). Route
     // CJK glyph fallback to the designated Japanese font; other scripts keep
     // using the fontconfig path.
     {

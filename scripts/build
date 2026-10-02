@@ -19,8 +19,7 @@ cd "$BASE_DIR/libreoffice-core"
 
 # LOWA: gbuild は VFS ファイルリスト変更時に .link（soffice.mjs へ埋め込まれる
 # VFS ディレクトリツリー断片）と最終リンクの再実行を取りこぼし、「新 data + 旧
-# mjs」という起動不能な成果物を作ることがある（lowa-poc EXPERIMENTS.md
-# EXP-20260707-16 / EXP-20260708-05 参照）。毎ビルド強制リリンクになるコストを
+# mjs」という起動不能な成果物を作ることがある。毎ビルド強制リリンクになるコストを
 # 払ってでも、混在成果物を確実に防ぐ。
 echo "Forcing relink (drop stale .link and executable link targets)"
 rm -f "$BASE_DIR/libreoffice-core/workdir/CustomTarget/static/emscripten_fs_image/soffice.data.js.link"

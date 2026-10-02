@@ -123,7 +123,7 @@ std::shared_ptr< ThreadPool >& GetStaticThreadPool()
         // 実行しており、そこでは Atomics.wait が禁止されている。ワーカースレッドが
         // SolarMutex を取りに来ると、メインスレッドの SvpSalYieldMutex 引き渡し
         // 待ち（condition_variable::wait）が terminate する（pptx の oox テキスト
-        // インポートで発生、lowa-poc EXPERIMENTS.md EXP-20260712-08）。
+        // インポートで発生）。
         // 共有プールをワーカー0にすると pushTask されたタスクは呼び出しスレッドで
         // インライン実行され（waitUntilDone/shutdown の empty-workers 経路）、
         // この系統のクラッシュを一括で防げる。Calc のシート逐次化と同じ狙いの汎用版。
